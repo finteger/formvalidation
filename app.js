@@ -4,6 +4,11 @@ const ejs = require('ejs');
 const mongoose = require('mongoose');
 const User = require('./user.js');
 const Joi = require('joi');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const saltRounds = 10;
+
+
 
 const app = express();
 
@@ -33,7 +38,7 @@ mongoose.connect(url, connectionParams)
 
 
 app.get('/register', (req, res) =>{
-res.render('form.ejs').status(200);
+res.render('form.ejs');
 })
 
 
@@ -46,38 +51,28 @@ const schema = Joi.object({
 });
 
 
-const schema2 = Joi.object({
+app.post('/register', async function(req, res, next) {
 
-    email: Joi.string().email().required(),
-    password: Joi.string().min(8).required()
-
-});
-
-app.post('/register', async function(req, res) {
 const { error, value } = schema.validate(req.body);
-const userEmail = req.body.email;
-const result = await User.find({ email: userEmail});
+
+bcrypt.hash(req.body.password, saltRounds, function(err, hash){
 
 if(error){
     return next(new Error(error.details[0].message));
-}
-
-if(result){
-    res.send('User already exists!');
-    return;
 }
 
 
 const user = new User({
     email: req.body.email,
     age: req.body.age,
-    password: req.body.password,
+    password: hash,
 });
 
 user.save();
 
 res.redirect('/login');
 
+});
 });
 
 
@@ -89,26 +84,37 @@ app.get('/login', (req, res) => {
 });
 
 
+
+
+
+
+
 app.post('/login', async (req, res) =>{
-    const userEmail = req.body.email;
-    const userPassword = req.body.password;
-    const result = await User.find({ email: userEmail, password: userPassword});
-    
-    schema2.validate(req.body);
+   
+const { email, password } = req.body;
 
-    
-    console.log(result[0].email);
+const user = await User.findOne({ email });
 
-    console.log(result[0].password);
+if(!user) {
+    res.status(401).send({error: 'Invalid Credentials.'});
+}
 
-    if(result[0].email === userEmail && result[0].password === userPassword){
-        res.render('home.ejs');
-    } else {
-        res.send('That username and password does not exist.');
-    }
+const isMatch = await bcrypt.compare(password, user.password);
+
+if(!isMatch){
+  res.status(401).send({error: 'Invalid Credentials.'});
+}
+
+const token = jwt.sign({ userId: user._id}, 'secret_key');
+
+res.send({ token });
+
+});
 
 
-})
+
+
+
 
 app.get('/home', (req, res) => {
 
@@ -119,7 +125,7 @@ app.get('/home', (req, res) => {
 
 app.use(function(err, req, res, next){
 console.error(err.stack);
-res.status(500).send('Something went wrong!');
+res.status(500).send(err.stack);
 
 })
 

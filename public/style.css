@@ -1,6 +1,4 @@
-body{
 
-}
 
 #heading{
 font-size:25px;
@@ -11,7 +9,7 @@ margin-bottom:50px;
 #email{
 margin-bottom:15px;
 padding: 5px;
-border-radius:15px;
+border-radius:8px;
 color: #000;
 }
 
@@ -19,7 +17,7 @@ color: #000;
 margin-left:10px;
 margin-bottom:15px;
 padding: 5px;
-border-radius:15px;
+border-radius:8px;
 color: #000;
 }
 
@@ -35,7 +33,7 @@ padding:5px;
     padding:25px;
     border: 2px solid darkslategrey;
     max-height:200px;
-    border-radius:25px;
-    background-image: linear-gradient(to left, blue, lightblue);
+    border-radius:15px;
+    background-image: linear-gradient(to bottom, blue, lightblue);
 }
 
